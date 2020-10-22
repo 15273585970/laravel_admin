@@ -51,8 +51,6 @@ class GoodsControoler extends AdminController
             else return '该商品暂无设置';
         })->switch($states);
 
-
-
 //        $grid->column('created_at');
         $grid->column('updated_at');
         //设置每页显示条数
@@ -108,13 +106,39 @@ class GoodsControoler extends AdminController
     protected function form()
     {
         $form = new Form(new Goods());
+        $form->text('name','goods Name');
+        $form->number('price','line Price');
+        $form->text('category.name','category Name');
+        $form->text('state','state');
 
-        $form->column('status')->switch();
-        $states = [
-            'on'  => ['value' => 1001, 'text' => '打开', 'color' => 'primary'],
-            'off' => ['value' => 1002, 'text' => '关闭', 'color' => 'default'],
-        ];
-        $form->column('recommend')->switch($states);
+        $form->switch('recommend','status');
+        $form->display('created_at','create Time');
+        $form->display('updated_at','update Time');
+        $form->tools(function(Form\Tools $tools){
+            //去掉列表按钮
+            $tools->disableList();
+            //去掉删除按钮
+            $tools->disableDelete();
+            //去掉查看按钮
+            $tools->disableView();
+            $tools->add("<a class=\"btn btn-sm btn-danger\"><i class=\"fa fa-trash\"></i>&nbsp;&nbsp;delete</a>");
+        });
+
+        $form->footer(function($tooter){
+           //去掉重置按钮
+            $tooter->disableReset();
+            //去掉提交按钮
+          //  $tooter->disableSubmit();
+            //去掉 继续编辑 checkbox
+            $tooter->disableEditingCheck();
+            // 去掉 继续创建 checkboox
+            $tooter->disableCreatingCheck();
+        });
+
+
+//        //忽略不需要保存的字段
+//        $form->ignore(['name']);
+
         return $form;
     }
 }
