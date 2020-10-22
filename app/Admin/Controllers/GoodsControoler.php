@@ -2,6 +2,7 @@
 
 namespace App\Admin\Controllers;
 
+use App\Enums\GoodsRecommend;
 use App\Enums\GoodsState;
 use App\Models\GoodsCategory;
 use App\Models\Goods;
@@ -32,20 +33,56 @@ class GoodsControoler extends AdminController
         $grid->column('name')->editable();
 
         $grid->column('line_price');
-        $grid->column('price');
+//        $grid->column('price');
 
         $grid->column('category.name');
         $grid->column('state')->display(function($state){
             return GoodsState::getKey(intval($state));
         });
 
-        $grid->column('created_at');
+
+        $states = [
+            'on'  => ['value' => 1001, 'text' => '打开', 'color' => 'primary'],
+            'off' => ['value' => 1002, 'text' => '关闭', 'color' => 'default'],
+        ];
+
+        $grid->column('recommend')->display(function($state){
+            if ( !$state ) return GoodsRecommend::getKey(intval($state));
+            else return '该商品暂无设置';
+        })->switch($states);
+
+
+
+//        $grid->column('created_at');
         $grid->column('updated_at');
         //设置每页显示条数
         $grid->paginate(15);
+
+
+        //价格范围查询
+        $grid->column('price','price')->filter('range');
+//        $grid->column('price')->editable('textarea');
+        $grid->column('birth')->editable('date');
+        //时间范围查询
+        $grid->column('created_at','created_at')->filter('range','datetime');
+//        $grid->column('name')->editable('select', [1 => 'option1', 2 => 'option2', 3 => 'option3']);
         //设置简单搜索框
         $grid->filter(function( $filter ){
-             $filter->between('create_at','Create Time')->datetime();
+
+             //去掉默认的id过滤器
+             $filter->disableIdFilter();
+             $filter->like('name','Goods Name');
+             //分类查询
+             $filter->like('category.name','Category Name');
+             $filter->between('created_at','Create Time')->datetime();
+
+//             $filter->where(function($query){
+//                 $query->where('name','like',"%{$this->input}%")
+//                 ->orWhere('price','like',"%{$this->input}%");
+//             },'Text');
+
+
+
         });
 
         return $grid;
@@ -60,9 +97,6 @@ class GoodsControoler extends AdminController
     protected function detail($id)
     {
         $show = new Show(Goods::findOrFail($id));
-
-
-
         return $show;
     }
 
@@ -75,8 +109,12 @@ class GoodsControoler extends AdminController
     {
         $form = new Form(new Goods());
 
-
-
+        $form->column('status')->switch();
+        $states = [
+            'on'  => ['value' => 1001, 'text' => '打开', 'color' => 'primary'],
+            'off' => ['value' => 1002, 'text' => '关闭', 'color' => 'default'],
+        ];
+        $form->column('recommend')->switch($states);
         return $form;
     }
 }
