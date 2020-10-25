@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6bd0b59faea6ae471e24e9a2e5f52261",
+    "content-hash": "d4529dc7b6a4d29eb6e450193dcecd38",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1333,6 +1333,58 @@
                 "minimizer"
             ],
             "time": "2020-03-05T20:41:28+00:00"
+        },
+        {
+            "name": "johnlui/aliyun-oss",
+            "version": "v2.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/johnlui/AliyunOSS.git",
+                "reference": "f10fdec4775e22a8295366981e1daf48c62ce5d3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/johnlui/AliyunOSS/zipball/f10fdec4775e22a8295366981e1daf48c62ce5d3",
+                "reference": "f10fdec4775e22a8295366981e1daf48c62ce5d3",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "php": ">=5.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/AliyunOSS.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "John Lui",
+                    "email": "wenhanlv@gmail.com"
+                }
+            ],
+            "description": "阿里云 OSS 官方 SDK 的 Composer 封装，支持任何 PHP 项目，包括 Laravel、Symfony、TinyLara 等等。",
+            "homepage": "https://github.com/johnlui/AliyunOSS",
+            "keywords": [
+                "AliyunOSS",
+                "aliyun",
+                "oss"
+            ],
+            "support": {
+                "issues": "https://github.com/johnlui/AliyunOSS/issues",
+                "source": "https://github.com/johnlui/AliyunOSS/tree/master"
+            },
+            "time": "2017-04-06T06:48:21+00:00"
         },
         {
             "name": "laminas/laminas-code",
@@ -8050,5 +8102,5 @@
         "php": "^7.2.5"
     },
     "platform-dev": [],
-    "plugin-api-version": "1.1.0"
+    "plugin-api-version": "2.0.0"
 }
