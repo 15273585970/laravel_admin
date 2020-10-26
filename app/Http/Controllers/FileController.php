@@ -14,6 +14,7 @@ class FileController extends Controller
         //获取上传的文件
         $file = $request->file('file');
         if ( !$file ) {
+            
             return view('uploadfile');
         }
         //获取上传图片的临时地址
