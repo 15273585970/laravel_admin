@@ -32,11 +32,22 @@ Route::any('getThirdParty','FileController@getThirdParty');
 //设置防盗链
 Route::any('setPreventingHotlinking','FileController@setPreventingHotlinking');
 
+//追加文件上传
+Route::get('appendUploadFile','FileController@appendUploadFile');
+Route::get('appendSploadString','FileController@appendSploadString');
 
 
 
+//分片上传
+Route::get('ShardToUpload','FileController@ShardToUpload');
+Route::get('ShardToUploadLocal','FileController@ShardToUploadLocal');  //本地分片上传
+Route::get('ShardToUpload','FileController@ShardToUpload');
+Route::get('ShardToUploadDir','FileController@ShardToUploadDir');
+Route::get('getAlreadyShardUpload','FileController@getAlreadyShardUpload');
 
 
+//下载文件到本地
+Route::get('dwLocalFile','FileController@dwLocalFile');
 
 Route::any('file_upload','FileController@upload');
 

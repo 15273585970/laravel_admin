@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Service\UploadService;
 use OSS\Core\OssException;
+use OSS\Core\OssUtil;
 use OSS\OssClient;
 
 class FileController extends Controller
@@ -214,6 +215,225 @@ class FileController extends Controller
 //            return;
 //        }
 //        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 追加上传字符串
+     */
+    public function appendSploadString()
+    {
+        // 设置文件名称。
+        $object = "testName";
+        // 获取文件内容。
+        $content_array = array('Hello OSS', 'Hi OSS', 'OSS OK');
+        try{
+            // 第一次追加上传。第一次追加的位置是0，返回值为下一次追加的位置。后续追加的位置是追加前文件的长度。
+            $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[0], 0);
+            $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[1], $position);
+            $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[2], $position);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 追加上传文件
+     *
+     * 会把多个文件里面的content 合并到  一个问价content
+     */
+    public function appendUploadFile()
+    {
+        // 设置文件名称。
+        $object = "addend_upload_file";
+        // 获取本地文件1。
+        $filePath = "D:\project\yx_b2b_app\/test.txt";
+        // 获取本地文件2。
+        $filePath1 = "D:\project\yx_b2b_app\/test\/test2.txt";
+        try{
+            $position = $this->ossClient->appendFile($this->bucket, $object, $filePath, 0);
+            $position = $this->ossClient->appendFile($this->bucket, $object, $filePath1, $position);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 分片上传
+     */
+    public function ShardToUpload()
+    {
+        $bucket= $this->bucket;
+        $object = "测试分片上传";
+        $uploadFile = "D:\software\/navcate12";
+
+        /**
+         *  步骤1：初始化一个分片上传事件，获取uploadId。
+         */
+        try{
+            $ossClient = $this->ossClient;
+
+            //返回uploadId。uploadId是分片上传事件的唯一标识，您可以根据uploadId发起相关的操作，如取消分片上传、查询分片上传等。
+            $uploadId = $ossClient->initiateMultipartUpload($bucket, $object);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": initiateMultipartUpload FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": initiateMultipartUpload OK" . "\n");
+        /*
+         * 步骤2：上传分片。
+         */
+        $partSize = 10 * 1024 * 1024;
+        $uploadFileSize = filesize($uploadFile);
+        $pieces = $ossClient->generateMultiuploadParts($uploadFileSize, $partSize);
+        $responseUploadPart = array();
+        $uploadPosition = 0;
+        $isCheckMd5 = true;
+        foreach ($pieces as $i => $piece) {
+            $fromPos = $uploadPosition + (integer)$piece[$ossClient::OSS_SEEK_TO];
+            $toPos = (integer)$piece[$ossClient::OSS_LENGTH] + $fromPos - 1;
+            $upOptions = array(
+                // 上传文件。
+                $ossClient::OSS_FILE_UPLOAD => $uploadFile,
+                // 设置分片号。
+                $ossClient::OSS_PART_NUM => ($i + 1),
+                // 指定分片上传起始位置。
+                $ossClient::OSS_SEEK_TO => $fromPos,
+                // 指定文件长度。
+                $ossClient::OSS_LENGTH => $toPos - $fromPos + 1,
+                // 是否开启MD5校验，true为开启。
+                $ossClient::OSS_CHECK_MD5 => $isCheckMd5,
+            );
+            // 开启MD5校验。
+            if ($isCheckMd5) {
+                $contentMd5 = OssUtil::getMd5SumForFile($uploadFile, $fromPos, $toPos);
+                $upOptions[$ossClient::OSS_CONTENT_MD5] = $contentMd5;
+            }
+            try {
+                // 上传分片。
+                $responseUploadPart[] = $ossClient->uploadPart($bucket, $object, $uploadId, $upOptions);
+            } catch(OssException $e) {
+                printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} FAILED\n");
+                printf($e->getMessage() . "\n");
+                return;
+            }
+            printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} OK\n");
+        }
+        // $uploadParts是由每个分片的ETag和分片号（PartNumber）组成的数组。
+        $uploadParts = array();
+        foreach ($responseUploadPart as $i => $eTag) {
+            $uploadParts[] = array(
+                'PartNumber' => ($i + 1),
+                'ETag' => $eTag,
+            );
+        }
+        /**
+         * 步骤3：完成上传。
+         */
+        try {
+            // 执行completeMultipartUpload操作时，需要提供所有有效的$uploadParts。OSS收到提交的$uploadParts后，会逐一验证每个分片的有效性。当所有的数据分片验证通过后，OSS将把这些分片组合成一个完整的文件。
+            $ossClient->completeMultipartUpload($bucket, $object, $uploadId, $uploadParts);
+        }  catch(OssException $e) {
+            printf(__FUNCTION__ . ": completeMultipartUpload FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        printf(__FUNCTION__ . ": completeMultipartUpload OK\n");
+    }
+
+
+    /**
+     * 分片本地上传
+     */
+    public function ShardToUploadLocal()
+    {
+
+        $object = "test.php";
+        $file = "C:\Users\Administrator\Desktop\/test.php";
+        $file = iconv('utf-8', 'gbk//ignore', $file);
+        $options = array(
+            OssClient::OSS_CHECK_MD5 => true,
+            OssClient::OSS_PART_SIZE => 1,
+        );
+        try{
+            $this->ossClient->multiuploadFile($this->bucket, $object, $file, $options);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ":  OK" . "\n");
+    }
+
+
+    /**
+     * 分片上传目录
+     */
+    public function ShardToUploadDir()
+    {
+        $bucket= $this->bucket;
+        $localDirectory = "C:\Windows\Web\Screen";
+        $prefix = "samples/codes";
+        try {
+            $this->ossClient->uploadDir($bucket, $prefix, $localDirectory);
+        }  catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ":  OK" . "\n");
+    }
+
+
+    /**
+     * 已经分片上传列表
+     */
+    public function getAlreadyShardUpload()
+    {
+        $bucket= $this->bucket;
+        $object = "已经上传分片列表";
+        $uploadId = "";
+
+        try{
+            $listPartsInfo = $this->ossClient->listParts($bucket, $object, $uploadId);
+            foreach ($listPartsInfo->getListPart() as $partInfo) {
+                print($partInfo->getPartNumber() . "\t" . $partInfo->getSize() . "\t" . $partInfo->getETag() . "\t" . $partInfo->getLastModified() . "\n");
+            }
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 下载文件到本地
+     */
+    public function dwLocalFile()
+    {
+        $object = "D:\student\oss\/oss.txt";
+// 获取0~4字节（包括0和4），共5个字节的数据。如果指定的范围无效（比如开始或结束位置的指定值为负数，或指定值大于文件大小），则下载整个文件。
+        $options = array(OssClient::OSS_RANGE => '0-4');
+        try{
+            $content = $this->ossClient->getObject($this->bucket, $object, $options);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print ($content);
+        print(__FUNCTION__ . ": OK" . "\n");
     }
 
 
