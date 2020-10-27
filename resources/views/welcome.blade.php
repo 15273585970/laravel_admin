@@ -81,7 +81,7 @@
 
             <div class="content">
                 <div class="title m-b-md">
-                    Laravel
+                    Laravel and ZhiHao <h6>zuishuai</h6>
                 </div>
 
                 <div class="links">
