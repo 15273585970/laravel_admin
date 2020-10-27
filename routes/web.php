@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::any('file_upload','FileController@upload');
+//Route::get('one',function (){
+//   return 'ok';
+//});
+//Route::any('read','FileController@read');
+//Route::any('file_upload','FileController@upload');
 
 

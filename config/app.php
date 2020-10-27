@@ -161,7 +161,6 @@ return [
         Illuminate\Translation\TranslationServiceProvider::class,
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
-        Jacobcyl\AliOSS\AliOssServiceProvider::class,
 
         /*
          * Package Service Providers...
@@ -176,6 +175,8 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        //阿里云oss
+        Jacobcyl\AliOSS\AliOssServiceProvider :: class,
     ],
 
     /*
