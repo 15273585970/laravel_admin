@@ -50,5 +50,38 @@ Route::get('getAlreadyShardUpload','FileController@getAlreadyShardUpload');
 Route::get('dwLocalFile','FileController@dwLocalFile');
 
 Route::any('file_upload','FileController@upload');
+Route::any('batchDownloadFile','FileController@batchDownloadFile');
+
+//软连接管理
+Route::any('createSoftConnection','FileController@createSoftConnection');
 
 
+//版本控制管理
+Route::any('managedVersionControl','FileController@managedVersionControl');
+Route::any('controlerPullFille','FileController@controlerPullFille');
+Route::any('additionalUpload','FileController@additionalUpload');
+Route::any('controlerPullShardFile','FileController@controlerPullShardFile');
+
+
+//设置对象标签
+Route::any('addObjecFileLabel','FileController@addObjecFileLabel');
+Route::any('getObjecFileLabel','FileController@getObjecFileLabel');
+Route::any('delObjectTab','FileController@delObjectTab');
+
+
+
+//单链接限速
+Route::get('singleLinkSpeedLimit','FileController@singleLinkSpeedLimit');
+Route::get('subscribeUrlWayToDownload','FileController@subscribeUrlWayToDownload');
+
+
+//数据加密
+Route::get('dataEncryption','FileController@dataEncryption');
+
+
+//sts 授权访问
+Route::get('stsTemporaryAuthorization','FileController@stsTemporaryAuthorization');
+
+
+//图片处理
+Route::any('imageProcess','FileController@imageProcess');
