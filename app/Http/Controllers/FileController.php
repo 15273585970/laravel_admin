@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Service\UploadService;
 use OSS\Core\OssException;
 use OSS\Core\OssUtil;
+use OSS\Model\ServerSideEncryptionConfig;
 use OSS\OssClient;
 
 class FileController extends Controller
@@ -28,7 +29,7 @@ class FileController extends Controller
         $this->accessKeyId = env("ALIYUN_ACCESSKEY_ID");
         $this->accesskeySecret = env("ALIYUN_ACCESSKEY_SECRET");
         $this->endpoint = env("ALIYUN_ENDPOINT");
-        $this->bucket = 'zhihao-lthink-resource-test';
+        $this->bucket = 'zhihao-lthink-resource';
         $this->ossClient = new OssClient($this->accessKeyId, $this->accesskeySecret, $this->endpoint);
     }
 
@@ -71,12 +72,12 @@ class FileController extends Controller
     {
         try {
 
-            $bucketListInfo = $this->ossClient->listBuckets();
+            $bucketListInfo =  $this->ossClient->listBuckets();
             //获取存储空间地域
-            $Regions = $this->ossClient->getBucketLocation($this->bucket);
+            $Regions =  $this->ossClient->getBucketLocation($this->bucket);
 
             //获取存储空间元信息
-            $Metas = $this->ossClient->getBucketMeta($this->bucket);
+            $Metas =  $this->ossClient->getBucketMeta($this->bucket);
 
         } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
@@ -108,7 +109,7 @@ class FileController extends Controller
     {
         try {
             // 获取存储空间的信息，包括存储空间名称（Name）、所在地域（Location）、创建日期（CreateDate）、存储类型（StorageClass）、外网访问域名（ExtranetEndpoint）以及内网访问域名（IntranetEndpoint）等。
-            $info = $this->ossClient->getBucketInfo($this->bucket);
+            $info =  $this->ossClient->getBucketInfo($this->bucket);
             printf("bucket name:%s\n", $info->getName());
             printf("bucket location:%s\n", $info->getLocation());
             printf("bucket creation time:%s\n", $info->getCreateDate());
@@ -228,12 +229,12 @@ class FileController extends Controller
         $object = "testName";
         // 获取文件内容。
         $content_array = array('Hello OSS', 'Hi OSS', 'OSS OK');
-        try {
+        try{
             // 第一次追加上传。第一次追加的位置是0，返回值为下一次追加的位置。后续追加的位置是追加前文件的长度。
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[0], 0);
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[1], $position);
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[2], $position);
-        } catch (OssException $e) {
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -255,10 +256,10 @@ class FileController extends Controller
         $filePath = "D:\project\yx_b2b_app\/test.txt";
         // 获取本地文件2。
         $filePath1 = "D:\project\yx_b2b_app\/test\/test2.txt";
-        try {
+        try{
             $position = $this->ossClient->appendFile($this->bucket, $object, $filePath, 0);
             $position = $this->ossClient->appendFile($this->bucket, $object, $filePath1, $position);
-        } catch (OssException $e) {
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -272,19 +273,19 @@ class FileController extends Controller
      */
     public function ShardToUpload()
     {
-        $bucket = $this->bucket;
+        $bucket= $this->bucket;
         $object = "测试分片上传";
         $uploadFile = "D:\software\/navcate12";
 
         /**
          *  步骤1：初始化一个分片上传事件，获取uploadId。
          */
-        try {
+        try{
             $ossClient = $this->ossClient;
 
             //返回uploadId。uploadId是分片上传事件的唯一标识，您可以根据uploadId发起相关的操作，如取消分片上传、查询分片上传等。
             $uploadId = $ossClient->initiateMultipartUpload($bucket, $object);
-        } catch (OssException $e) {
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": initiateMultipartUpload FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -322,7 +323,7 @@ class FileController extends Controller
             try {
                 // 上传分片。
                 $responseUploadPart[] = $ossClient->uploadPart($bucket, $object, $uploadId, $upOptions);
-            } catch (OssException $e) {
+            } catch(OssException $e) {
                 printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} FAILED\n");
                 printf($e->getMessage() . "\n");
                 return;
@@ -343,7 +344,7 @@ class FileController extends Controller
         try {
             // 执行completeMultipartUpload操作时，需要提供所有有效的$uploadParts。OSS收到提交的$uploadParts后，会逐一验证每个分片的有效性。当所有的数据分片验证通过后，OSS将把这些分片组合成一个完整的文件。
             $ossClient->completeMultipartUpload($bucket, $object, $uploadId, $uploadParts);
-        } catch (OssException $e) {
+        }  catch(OssException $e) {
             printf(__FUNCTION__ . ": completeMultipartUpload FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -365,9 +366,9 @@ class FileController extends Controller
             OssClient::OSS_CHECK_MD5 => true,
             OssClient::OSS_PART_SIZE => 1,
         );
-        try {
+        try{
             $this->ossClient->multiuploadFile($this->bucket, $object, $file, $options);
-        } catch (OssException $e) {
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -381,12 +382,12 @@ class FileController extends Controller
      */
     public function ShardToUploadDir()
     {
-        $bucket = $this->bucket;
+        $bucket= $this->bucket;
         $localDirectory = "C:\Windows\Web\Screen";
         $prefix = "samples/codes";
         try {
             $this->ossClient->uploadDir($bucket, $prefix, $localDirectory);
-        } catch (OssException $e) {
+        }  catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -400,16 +401,16 @@ class FileController extends Controller
      */
     public function getAlreadyShardUpload()
     {
-        $bucket = $this->bucket;
+        $bucket= $this->bucket;
         $object = "已经上传分片列表";
         $uploadId = "";
 
-        try {
+        try{
             $listPartsInfo = $this->ossClient->listParts($bucket, $object, $uploadId);
             foreach ($listPartsInfo->getListPart() as $partInfo) {
                 print($partInfo->getPartNumber() . "\t" . $partInfo->getSize() . "\t" . $partInfo->getETag() . "\t" . $partInfo->getLastModified() . "\n");
             }
-        } catch (OssException $e) {
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -423,12 +424,32 @@ class FileController extends Controller
      */
     public function dwLocalFile()
     {
-        $object = "D:\student\oss\/oss.txt";
+        $object = "samples/codes/img101.png";
 // 获取0~4字节（包括0和4），共5个字节的数据。如果指定的范围无效（比如开始或结束位置的指定值为负数，或指定值大于文件大小），则下载整个文件。
         $options = array(OssClient::OSS_RANGE => '0-4');
         try {
             $content = $this->ossClient->getObject($this->bucket, $object, $options);
         } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print ($content);
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 批量下载文件
+     */
+    public function batchDownloadFile()
+    {
+        $object = "samples/codes/img101.png.copy";
+// 获取0~4字节（包括0和4），共5个字节的数据。如果指定的范围无效（比如开始或结束位置的指定值为负数，或指定值大于文件大小），则下载整个文件。
+        $options = array(OssClient::OSS_RANGE => '0-4');
+        try{
+            $content = $this->ossClient->getObject($this->bucket, $object, $options);
+        } catch(OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -616,6 +637,429 @@ class FileController extends Controller
         }
         print(__FUNCTION__ . ": OK" . "\n");
     }
+
+
+    /**
+     * 创建软链接
+     */
+    public function createSoftConnection()
+    {
+        $object = "samples/codes/img101.png.copy";
+        $symlink = "ceshi";
+        try {
+            $row = $this->ossClient->putSymlink($this->bucket, $symlink, $object);
+            dd($row);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 管理版本控制
+     *  : 列举出bucket所有object的版本信息
+     */
+    public function managedVersionControl()
+    {
+        $bucket = $this->bucket;
+
+        $ossClient = $this->ossClient;
+
+        try {
+
+            $maxKey = 100;
+            $nextKeyMarker = '';
+            $nextVersionIdMarker = '';
+
+            while (true) {
+                $options = array(
+                    'delimiter' => '',
+                    'key-marker' => $nextKeyMarker,
+                    'max-keys' => $maxKey,
+                    'version-id-marker' => $nextVersionIdMarker,
+                );
+                $result = $ossClient->listObjectVersions($bucket, $options);
+
+                $nextKeyMarker = $result->getNextKeyMarker();
+                $nextVersionIdMarker = $result->getNextVersionIdMarker();
+
+                $objectList = $result->getObjectVersionList();
+                $deleteMarkerList = $result->getDeleteMarkerList();
+
+                // 打印Object版本信息。
+                if (!empty($objectList)) {
+                    print("objectList:\n");
+                    foreach ($objectList as $objectInfo) {
+                        print($objectInfo->getKey() . ",");
+                        print($objectInfo->getVersionId() . ",");
+                        print($objectInfo->getLastModified() . ",");
+                        print($objectInfo->getETag() . ",");
+                        print($objectInfo->getSize() . ",");
+                        print($objectInfo->getIsLatest() . "\n");
+                    }
+                }
+
+                // 打印删除标记版本信息。
+                if (!empty($deleteMarkerList)) {
+                    print("deleteMarkerList: \n");
+                    foreach ($deleteMarkerList as $deleteMarkerInfo) {
+                        print($deleteMarkerInfo->getKey() . ",");
+                        print($deleteMarkerInfo->getVersionId() . ",");
+                        print($deleteMarkerInfo->getLastModified() . ",");
+                        print($deleteMarkerInfo->getIsLatest() . "\n");
+                    }
+                }
+
+                if ($result->getIsTruncated() !== "true") {
+                    break;
+                }
+            }
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 版本控制 上传简单文件
+     */
+    public function controlerPullFille()
+    {
+        $object = "D:\project\laravel_admin\resources\views\uploadfile.blade.php";
+        $content = "hello world";
+        try {
+            // 在受版本控制的Bucket中上传Object。
+            $ret = $this->ossClient->putObject($this->bucket, $object, $content);
+            // 查看Object的版本信息。
+            print("versionId:" . $ret[OssClient::OSS_HEADER_VERSION_ID]);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 版本控制 分片上传文件
+     */
+    public function controlerPullShardFile()
+    {
+        $bucket = $this->bucket;
+        $object = "C:\Users\Administrator\Downloads\GitKrakenSetup-6.5.1.exe";
+        // 填写本地文件的完整路径。
+        $uploadFile = "C:\Users\Administrator\Downloads\GitKrakenSetup-6.5.1.exe";
+
+        /**
+         *  步骤1：初始化一个分片上传事件，获取uploadId。
+         */
+        try {
+            $ossClient = $this->ossClient;
+
+            // 返回uploadId。uploadId是分片上传事件的唯一标识。您可以根据uploadId发起相关的操作，如取消分片上传、查询分片上传等。
+            $uploadId = $ossClient->initiateMultipartUpload($bucket, $object);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": initiateMultipartUpload FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": initiateMultipartUpload OK" . "\n");
+        /*
+         * 步骤2：上传分片。
+         */
+        $partSize = 10 * 1024 * 1024;
+        $uploadFileSize = filesize($uploadFile);
+        $pieces = $ossClient->generateMultiuploadParts($uploadFileSize, $partSize);
+        $responseUploadPart = array();
+        $uploadPosition = 0;
+        $isCheckMd5 = true;
+        foreach ($pieces as $i => $piece) {
+            $fromPos = $uploadPosition + (integer)$piece[$ossClient::OSS_SEEK_TO];
+            $toPos = (integer)$piece[$ossClient::OSS_LENGTH] + $fromPos - 1;
+            $upOptions = array(
+                // 上传文件。
+                $ossClient::OSS_FILE_UPLOAD => $uploadFile,
+                // 设置分片号。
+                $ossClient::OSS_PART_NUM => ($i + 1),
+                // 指定分片上传起始位置。
+                $ossClient::OSS_SEEK_TO => $fromPos,
+                // 指定文件长度。
+                $ossClient::OSS_LENGTH => $toPos - $fromPos + 1,
+                // 是否开启MD5校验，true表示开启，false表示未开启。
+                $ossClient::OSS_CHECK_MD5 => $isCheckMd5,
+            );
+            // 开启MD5校验。
+            if ($isCheckMd5) {
+                $contentMd5 = OssUtil::getMd5SumForFile($uploadFile, $fromPos, $toPos);
+                $upOptions[$ossClient::OSS_CONTENT_MD5] = $contentMd5;
+            }
+            try {
+                // 上传分片。
+                $responseUploadPart[] = $ossClient->uploadPart($bucket, $object, $uploadId, $upOptions);
+            } catch (OssException $e) {
+                printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} FAILED\n");
+                printf($e->getMessage() . "\n");
+                return;
+            }
+            printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} OK\n");
+        }
+        // $uploadParts是由每个分片的ETag和分片号（PartNumber）组成的数组。
+        $uploadParts = array();
+        foreach ($responseUploadPart as $i => $eTag) {
+            $uploadParts[] = array(
+                'PartNumber' => ($i + 1),
+                'ETag' => $eTag,
+            );
+        }
+        /**
+         * 步骤3：完成上传。
+         */
+        try {
+            // 执行completeMultipartUpload操作时，需要提供所有有效的$uploadParts。OSS收到提交的$uploadParts后，会逐一验证每个分片的有效性。当所有的数据分片验证通过后，OSS将把这些分片组合成一个完整的文件。
+            $ret = $ossClient->completeMultipartUpload($bucket, $object, $uploadId, $uploadParts);
+            // 查看Object版本信息。
+            print("versionId:" . $ret[OssClient::OSS_HEADER_VERSION_ID]);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": completeMultipartUpload FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        printf(__FUNCTION__ . ": completeMultipartUpload OK\n");
+    }
+
+
+    /**
+     * 追加上传
+     */
+    public function additionalUpload()
+    {
+        $bucket = $this->bucket;
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        // 表示第一次、第二次以及第三次追加上传后获取的文件内容分别为Hello OSS、Hi OSS以及OSS OK。
+        $content_array = array('Hello OSS', 'Hi OSS', 'OSS OK');
+        try {
+            $ossClient = $this->ossClient;
+            // 第一次追加上传。第一次追加的位置是0，返回值为下一次追加的位置。后续追加的位置是追加前文件的长度。
+            $position = $ossClient->appendObject($bucket, $object, $content_array[0], 0);
+            $position = $ossClient->appendObject($bucket, $object, $content_array[1], $position);
+            $position = $ossClient->appendObject($bucket, $object, $content_array[2], $position);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 上传对象文件 添加标签
+     */
+    public function addObjecFileLabel()
+    {
+        // yourObjectName表示即将上传的Object所在存储空间的完整名称，即包含文件后缀在内的完整路径，如填写为example/test.jpg。
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        $content = "hello world";
+        $ossClient = $this->ossClient;
+
+        // 设置对象标签。
+        $options = array(
+            OssClient::OSS_HEADERS => array(
+                'x-oss-tagging' => 'key1=value1&key2=value2&key3=value3',
+            ));
+
+        try {
+            // 通过简单上传的方式上传Object。
+            $ossClient->putObject($this->bucket, $object, $content, $options);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 获取对象文件标签名称
+     */
+    public function getObjecFileLabel()
+    {
+        // 填写Object所在存储空间的完整名称，即包含文件后缀在内的完整路径，例如example/test.jpg。
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        try {
+            // 获取对象标签。
+            $config = $this->ossClient->getObjectTagging($this->bucket, $object);
+            dd($config);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 删除对象标签
+     */
+    public function delObjectTab()
+    {
+        // 填写Object所在存储空间的完整名称，即包含文件后缀在内的完整路径，例如example/test.jpg。
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        try {
+            // 删除对象标签。
+            $this->ossClient->deleteObjectTagging($this->bucket, $object);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 单链接限速
+     */
+    public function singleLinkSpeedLimit()
+    {
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        $content = "hello world";
+
+        $ossClient = $this->ossClient;
+
+        // 限速100KB/s，即819200 bit/s。
+        $options = array(
+            OssClient::OSS_HEADERS => array(
+                OssClient::OSS_TRAFFIC_LIMIT => 819200,
+            ));
+
+        try {
+            // 限速上传。
+            $ossClient->putObject($this->bucket, $object, $content, $options);
+
+            // 限速下载。
+            $row = $ossClient->getObject($this->bucket, $object, $options);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 签民url方式 限速 下载
+     */
+    public function subscribeUrlWayToDownload()
+    {
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+
+        $ossClient = $this->ossClient;
+
+        // 限速100 KB/s，即819200 bit/s。
+        $options = array(
+            OssClient::OSS_TRAFFIC_LIMIT => 819200,
+        );
+
+        // 创建限速上传的URL，有效期为60s。
+        $timeout = 60;
+        $signedUrl = $ossClient->signUrl($this->bucket, $object, $timeout, "PUT", $options);
+        print($signedUrl);
+
+        // 创建限速下载的URL，有效期为120s。
+        $timeout = 120;
+        $signedUrl = $ossClient->signUrl($this->bucket, $object, $timeout, "GET", $options);
+        print($signedUrl);
+    }
+
+
+    /**
+     *数据加密
+     */
+    public function dataEncryption()
+    {
+        $bucket = $this->bucket;
+
+        $ossClient = $this->ossClient;
+
+        try {
+            // 将Bucket默认的服务器端加密方式设置为OSS完全托管加密（SSE-OSS）。
+            $config = new ServerSideEncryptionConfig("AES256");
+            $ossClient->putBucketEncryption($bucket, $config);
+
+            // 将Bucket默认的服务器端加密方式设置为KMS，且不指定CMK ID。
+            $config = new ServerSideEncryptionConfig("KMS");
+            $ossClient->putBucketEncryption($bucket, $config);
+
+            // 将Bucket默认的服务器端加密方式设置为KMS，且指定了CMK ID。
+            $config = new ServerSideEncryptionConfig("KMS", "your kms id");
+            $ossClient->putBucketEncryption($bucket, $config);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+    /**
+     * sts 临时授权访问
+     */
+    public function stsTemporaryAuthorization()
+    {
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        $securityToken = $this->accesskeySecret;
+
+        $content = "Hi, OSS.";
+
+        try {
+            // 使用STS临时授权上传文件。
+            $this->ossClient->putObject($this->bucket, $object, $content);
+        } catch (OssException $e) {
+            print $e->getMessage();
+        }
+
+    }
+
+
+    /**
+     * 图片处理
+     */
+    public function imageProcess()
+    {
+        $object = "C:\Users\Administrator\Desktop\大头像.jpg";
+        // 指定处理后的图片名称。
+        $download_file = "处理后的图片";
+
+        // 若目标图片不在指定Bucket内，需上传图片到目标Bucket。
+        // $ossClient->uploadFile($bucket, $object, "<yourLocalFile>");
+
+        // 将图片缩放为固定宽高100 px，并保存在本地。
+        $options = array(
+            OssClient::OSS_FILE_DOWNLOAD => $download_file,
+            OssClient::OSS_PROCESS => "image/resize,m_fixed,h_100,w_100" );
+        $this->ossClient->getObject($this->bucket, $object, $options);
+    }
+
+
+
 
 
 
