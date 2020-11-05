@@ -85,3 +85,4 @@ Route::get('stsTemporaryAuthorization','FileController@stsTemporaryAuthorization
 
 //图片处理
 Route::any('imageProcess','FileController@imageProcess');
+Route::any('test','FileController@test');
