@@ -22,6 +22,7 @@ class FileController extends Controller
 
 
     private $ossClient = '';
+
     public function __construct()
     {
         $this->accessKeyId = env("ALIYUN_ACCESSKEY_ID");
@@ -70,12 +71,12 @@ class FileController extends Controller
     {
         try {
 
-            $bucketListInfo =  $this->ossClient->listBuckets();
+            $bucketListInfo = $this->ossClient->listBuckets();
             //获取存储空间地域
-            $Regions =  $this->ossClient->getBucketLocation($this->bucket);
+            $Regions = $this->ossClient->getBucketLocation($this->bucket);
 
             //获取存储空间元信息
-            $Metas =  $this->ossClient->getBucketMeta($this->bucket);
+            $Metas = $this->ossClient->getBucketMeta($this->bucket);
 
         } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
@@ -107,7 +108,7 @@ class FileController extends Controller
     {
         try {
             // 获取存储空间的信息，包括存储空间名称（Name）、所在地域（Location）、创建日期（CreateDate）、存储类型（StorageClass）、外网访问域名（ExtranetEndpoint）以及内网访问域名（IntranetEndpoint）等。
-            $info =  $this->ossClient->getBucketInfo($this->bucket);
+            $info = $this->ossClient->getBucketInfo($this->bucket);
             printf("bucket name:%s\n", $info->getName());
             printf("bucket location:%s\n", $info->getLocation());
             printf("bucket creation time:%s\n", $info->getCreateDate());
@@ -227,12 +228,12 @@ class FileController extends Controller
         $object = "testName";
         // 获取文件内容。
         $content_array = array('Hello OSS', 'Hi OSS', 'OSS OK');
-        try{
+        try {
             // 第一次追加上传。第一次追加的位置是0，返回值为下一次追加的位置。后续追加的位置是追加前文件的长度。
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[0], 0);
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[1], $position);
             $position = $this->ossClient->appendObject($this->bucket, $object, $content_array[2], $position);
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -254,10 +255,10 @@ class FileController extends Controller
         $filePath = "D:\project\yx_b2b_app\/test.txt";
         // 获取本地文件2。
         $filePath1 = "D:\project\yx_b2b_app\/test\/test2.txt";
-        try{
+        try {
             $position = $this->ossClient->appendFile($this->bucket, $object, $filePath, 0);
             $position = $this->ossClient->appendFile($this->bucket, $object, $filePath1, $position);
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -271,19 +272,19 @@ class FileController extends Controller
      */
     public function ShardToUpload()
     {
-        $bucket= $this->bucket;
+        $bucket = $this->bucket;
         $object = "测试分片上传";
         $uploadFile = "D:\software\/navcate12";
 
         /**
          *  步骤1：初始化一个分片上传事件，获取uploadId。
          */
-        try{
+        try {
             $ossClient = $this->ossClient;
 
             //返回uploadId。uploadId是分片上传事件的唯一标识，您可以根据uploadId发起相关的操作，如取消分片上传、查询分片上传等。
             $uploadId = $ossClient->initiateMultipartUpload($bucket, $object);
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": initiateMultipartUpload FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -321,7 +322,7 @@ class FileController extends Controller
             try {
                 // 上传分片。
                 $responseUploadPart[] = $ossClient->uploadPart($bucket, $object, $uploadId, $upOptions);
-            } catch(OssException $e) {
+            } catch (OssException $e) {
                 printf(__FUNCTION__ . ": initiateMultipartUpload, uploadPart - part#{$i} FAILED\n");
                 printf($e->getMessage() . "\n");
                 return;
@@ -342,7 +343,7 @@ class FileController extends Controller
         try {
             // 执行completeMultipartUpload操作时，需要提供所有有效的$uploadParts。OSS收到提交的$uploadParts后，会逐一验证每个分片的有效性。当所有的数据分片验证通过后，OSS将把这些分片组合成一个完整的文件。
             $ossClient->completeMultipartUpload($bucket, $object, $uploadId, $uploadParts);
-        }  catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": completeMultipartUpload FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -364,9 +365,9 @@ class FileController extends Controller
             OssClient::OSS_CHECK_MD5 => true,
             OssClient::OSS_PART_SIZE => 1,
         );
-        try{
+        try {
             $this->ossClient->multiuploadFile($this->bucket, $object, $file, $options);
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -380,12 +381,12 @@ class FileController extends Controller
      */
     public function ShardToUploadDir()
     {
-        $bucket= $this->bucket;
+        $bucket = $this->bucket;
         $localDirectory = "C:\Windows\Web\Screen";
         $prefix = "samples/codes";
         try {
             $this->ossClient->uploadDir($bucket, $prefix, $localDirectory);
-        }  catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -399,16 +400,16 @@ class FileController extends Controller
      */
     public function getAlreadyShardUpload()
     {
-        $bucket= $this->bucket;
+        $bucket = $this->bucket;
         $object = "已经上传分片列表";
         $uploadId = "";
 
-        try{
+        try {
             $listPartsInfo = $this->ossClient->listParts($bucket, $object, $uploadId);
             foreach ($listPartsInfo->getListPart() as $partInfo) {
                 print($partInfo->getPartNumber() . "\t" . $partInfo->getSize() . "\t" . $partInfo->getETag() . "\t" . $partInfo->getLastModified() . "\n");
             }
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
@@ -425,14 +426,194 @@ class FileController extends Controller
         $object = "D:\student\oss\/oss.txt";
 // 获取0~4字节（包括0和4），共5个字节的数据。如果指定的范围无效（比如开始或结束位置的指定值为负数，或指定值大于文件大小），则下载整个文件。
         $options = array(OssClient::OSS_RANGE => '0-4');
-        try{
+        try {
             $content = $this->ossClient->getObject($this->bucket, $object, $options);
-        } catch(OssException $e) {
+        } catch (OssException $e) {
             printf(__FUNCTION__ . ": FAILED\n");
             printf($e->getMessage() . "\n");
             return;
         }
         print ($content);
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 判断指定的文件是否存在
+     */
+    public function isFile()
+    {
+        $bucket = "<yourBucketName>";
+        $object = "samples/codes/img100.jpg";
+
+        try {
+            $exist = $this->ossClient->doesObjectExist($this->bucket, $object);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+        var_dump($exist);
+    }
+
+
+    /**
+     * 管理文件访问权限  / 获取文件访问权限
+     */
+    public function managementFileAccess()
+    {
+        $object = "samples/codes/img100.jpg";
+        // 设置文件的访问权限为公共读，默认为继承Bucket。
+        $acl = "public-read";
+        try {
+            //  $this->ossClient->putObjectAcl($this->bucket, $object, $acl);
+            $row = $this->ossClient->getObjectAcl($this->bucket, $object);
+            dd($row);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 管理元文件信息
+     *  : 设置文件元信息
+     */
+    public function managementMetafileInfo()
+    {
+
+// yourObjectName表示想要设置文件元信息的Object所在存储空间的完整名称，即包含文件后缀在内的完整路径，如填写为example/test.jpg。
+        $object = "samples/codes/img100.jpg";
+        $content = file_get_contents(__FILE__);
+        $options = array(
+            OssClient::OSS_HEADERS => array(
+                'Expires' => '2012-10-01 08:00:00',
+                'Content-Disposition' => 'attachment; filename="xxxxxx"',
+                'x-oss-meta-self-define-title' => 'user define meta info',
+            ));
+        try {
+            $this->ossClient->putObject($this->bucket, $object, $content, $options);
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+    /**
+     * 列举所有文件
+     */
+    public function getBucketFileList()
+    {
+        $nextMarker = '';
+
+        while (true) {
+            try {
+                $options = array(
+                    'delimiter' => '',
+                    'marker' => $nextMarker,
+                );
+                $listObjectInfo = $this->ossClient->listObjects($this->bucket, $options);
+            } catch (OssException $e) {
+                printf(__FUNCTION__ . ": FAILED\n");
+                printf($e->getMessage() . "\n");
+                return;
+            }
+            // 得到nextMarker，从上一次listObjects读到的最后一个文件的下一个文件开始继续获取文件列表。
+            $nextMarker = $listObjectInfo->getNextMarker();
+            $listObject = $listObjectInfo->getObjectList();
+            $listPrefix = $listObjectInfo->getPrefixList();
+
+            if (!empty($listObject)) {
+                print("objectList:\n");
+                foreach ($listObject as $objectInfo) {
+                    print($objectInfo->getKey() . "\n");
+                }
+            }
+            if (!empty($listPrefix)) {
+                print("prefixList: \n");
+                foreach ($listPrefix as $prefixInfo) {
+                    print($prefixInfo->getPrefix() . "\n");
+                }
+            }
+            if ($listObjectInfo->getIsTruncated() !== "true") {
+                break;
+            }
+        }
+    }
+
+    /**
+     * 删除文件
+     */
+    public function delFile()
+    {
+        $object = "samples/codes/img100.jpg";
+
+        try{
+            $this->ossClient->deleteObject($this->bucket, $object);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+    /**
+     * 拷贝文件
+     */
+    public function copyBucket()
+    {
+        //被复制的bucket
+        $from_bucket = $this->bucket;
+        //文件地址
+        $from_object = "samples/codes/img101.png";
+
+
+        //复制的地方
+        $to_bucket = "zhihao-lthink-resource";
+        //重新命名
+        $to_object = $from_object . '.copy';
+        try{
+
+            $this->ossClient->copyObject($from_bucket, $from_object, $to_bucket, $to_object);
+        } catch(OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
+        print(__FUNCTION__ . ": OK" . "\n");
+    }
+
+
+
+
+
+    /**
+     * 创建软链接
+     */
+    public function createSoftLinks()
+    {
+
+        dd( strtoupper(md5(uniqid(mt_rand(), true))) );
+        //http://zhihao-lthink-resource.oss-cn-beijing.aliyuncs.com/Y7hyWHgDprpRwF9mIH1SBxCviuOKH1E7pkiiZZhv.jpeg
+        //"http://zhihao-lthink-resource-test.oss-cn-beijing.aliyuncs.com/qqq?symlink"
+        $object = "samples/codes/img101.png";
+        $symlink = "ceshi";
+        try {
+            $row =  $this->ossClient->putSymlink($this->bucket, $symlink, $object);
+            dd( $row );
+        } catch (OssException $e) {
+            printf(__FUNCTION__ . ": FAILED\n");
+            printf($e->getMessage() . "\n");
+            return;
+        }
         print(__FUNCTION__ . ": OK" . "\n");
     }
 

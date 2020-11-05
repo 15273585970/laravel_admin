@@ -48,7 +48,22 @@ Route::get('getAlreadyShardUpload','FileController@getAlreadyShardUpload');
 
 //下载文件到本地
 Route::get('dwLocalFile','FileController@dwLocalFile');
-
 Route::any('file_upload','FileController@upload');
 
 
+//检查文件是否存在
+Route::get('isFile','FileController@isFile');
+Route::get('managementFileAccess','FileController@managementFileAccess');
+
+
+//管理元文件信息
+Route::get('managementMetafileInfo','FileController@managementMetafileInfo');
+Route::get('getBucketFileList','FileController@getBucketFileList');
+Route::get('delFile','FileController@delFile');
+
+
+//拷贝文件
+Route::get('copyBucket','FileController@copyBucket');
+
+//软链接管理
+Route::get('createSoftLinks','FileController@createSoftLinks');
