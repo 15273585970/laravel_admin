@@ -1060,6 +1060,13 @@ class FileController extends Controller
 
 
 
+    public function ceshiData()
+    {
+        echo "ceshi";
+    }
+
+
+
 
 
 

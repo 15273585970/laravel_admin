@@ -174,7 +174,7 @@ return [
     'database' => [
 
         // Database connection for following tables.
-        'connection' => '',
+        'connection' => env(''),
 
         // User tables and model.
         'users_table' => 'admin_users',
